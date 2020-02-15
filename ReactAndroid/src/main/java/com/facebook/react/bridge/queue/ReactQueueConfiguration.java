@@ -14,9 +14,13 @@ package com.facebook.react.bridge.queue;
  *
  * <p>UI Queue Thread: The standard Android main UI thread and Looper. Not configurable. Native
  * Modules Queue Thread: The thread and Looper that native modules are invoked on. JS Queue Thread:
+ * 
  * The thread and Looper that JS is executed on.
+ * 
+ * 这个接口使用来获取React的线程队列配置
  */
 public interface ReactQueueConfiguration {
+
   MessageQueueThread getUIQueueThread();
 
   MessageQueueThread getNativeModulesQueueThread();

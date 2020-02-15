@@ -60,30 +60,46 @@ public abstract class ReactNativeHost {
       mReactInstanceManager = null;
     }
   }
-
+  /**
+   * 实例化ReactInstanceManager
+   * 
+   */
   protected ReactInstanceManager createReactInstanceManager() {
     ReactMarker.logMarker(ReactMarkerConstants.BUILD_REACT_INSTANCE_MANAGER_START);
+    // React实例化对象管理的。使用创建者模式。
     ReactInstanceManagerBuilder builder =
         ReactInstanceManager.builder()
+            // //应用上下文
             .setApplication(mApplication)
+            //JSMainModuleP相当于应用首页的js Bundle，可以传递url从服务器拉取js Bundle
+            //当然这个只在dev模式下可以使用
             .setJSMainModulePath(getJSMainModuleName())
+            // 是否开启dev模式
             .setUseDeveloperSupport(getUseDeveloperSupport())
+            // 红盒的回调
             .setRedBoxHandler(getRedBoxHandler())
             .setJavaScriptExecutorFactory(getJavaScriptExecutorFactory())
+            //自定义UI实现机制，这个我们一般用不到
             .setUIImplementationProvider(getUIImplementationProvider())
             .setJSIModulesPackage(getJSIModulePackage())
             .setInitialLifecycleState(LifecycleState.BEFORE_CREATE);
-
+    /**
+     * 添加ReactPackage
+     * 这个也就是在Application的获取ReactPackage列表
+     */
     for (ReactPackage reactPackage : getPackages()) {
       builder.addPackage(reactPackage);
     }
-
+    /**
+     * 获取JS Bundle的文件路径
+     */
     String jsBundleFile = getJSBundleFile();
     if (jsBundleFile != null) {
       builder.setJSBundleFile(jsBundleFile);
     } else {
       builder.setBundleAssetName(Assertions.assertNotNull(getBundleAssetName()));
     }
+    // 实例化ReactInstanceManager对象
     ReactInstanceManager reactInstanceManager = builder.build();
     ReactMarker.logMarker(ReactMarkerConstants.BUILD_REACT_INSTANCE_MANAGER_END);
     return reactInstanceManager;

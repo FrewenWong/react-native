@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 /** A set of Java APIs to expose to a particular JavaScript instance. */
+/**
+ * JavascriptModuleRegistry是JS Module映射表，NativeModuleRegistry是Java Module映射表
+ */
 public class NativeModuleRegistry {
 
   private final ReactApplicationContext mReactApplicationContext;

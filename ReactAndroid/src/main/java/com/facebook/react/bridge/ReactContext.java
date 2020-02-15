@@ -30,6 +30,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /**
  * Abstract ContextWrapper for Android application or activity {@link Context} and {@link
  * CatalystInstance}
+ * ReactContext继承于ContextWrapper，是ReactNative应用的上下文，
+ * 通过getContext()去获得，通过它可以访问ReactNative核心类的实现。
+ * ReactContext继承与ContextWrapper，并有子类：
  */
 public class ReactContext extends ContextWrapper {
 
@@ -70,14 +73,17 @@ public class ReactContext extends ContextWrapper {
     }
 
     mCatalystInstance = catalystInstance;
-
+    // ReactQueueConfiguration通过CatalystInstance来进行获取
     ReactQueueConfiguration queueConfig = catalystInstance.getReactQueueConfiguration();
+    // 然后根据CatalystInstance实例化对象来获取这三个线程
     initializeMessageQueueThreads(queueConfig);
   }
 
   /**
    * Initialize message queue threads using a ReactQueueConfiguration. TODO (janzer) T43898341 Make
    * this package instead of public
+   * 
+   * 我们的ReactContext进行初始化的时候，会获取这三个的线程
    */
   public void initializeMessageQueueThreads(ReactQueueConfiguration queueConfig) {
     if (mUiMessageQueueThread != null
@@ -85,6 +91,7 @@ public class ReactContext extends ContextWrapper {
         || mJSMessageQueueThread != null) {
       throw new IllegalStateException("Message queue threads already initialized");
     }
+    // 获取这三个线程
     mUiMessageQueueThread = queueConfig.getUIQueueThread();
     mNativeModulesMessageQueueThread = queueConfig.getNativeModulesQueueThread();
     mJSMessageQueueThread = queueConfig.getJSQueueThread();

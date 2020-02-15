@@ -19,6 +19,9 @@ import java.util.List;
  * A higher level API on top of the asynchronous JSC bridge. This provides an environment allowing
  * the invocation of JavaScript methods and lets a set of Java APIs be invokable from JavaScript as
  * well.
+ * CatalystInstance是ReactNative的中最核心的一个类了。
+ * CatalystInstance是ReactNative应用Java层、C++层、JS层通信总管理类。
+ * 总管Java层、JS层核心Module映射表与回调，三端通信的入口与桥梁。
  */
 @DoNotStrip
 public interface CatalystInstance

@@ -30,8 +30,9 @@ import NativeToastAndroid from './NativeToastAndroid';
  * ToastAndroid.showWithGravity('All Your Base Are Belong To Us', ToastAndroid.SHORT, ToastAndroid.CENTER);
  * ToastAndroid.showWithGravityAndOffset('A wild toast appeared!', ToastAndroid.LONG, ToastAndroid.BOTTOM, 25, 50);
  * ```
+ * 
+ * 定义一个ToastAndroid对象
  */
-
 const ToastAndroid = {
   // Toast duration constants
   SHORT: (NativeToastAndroid.getConstants().SHORT: number),
@@ -40,7 +41,7 @@ const ToastAndroid = {
   TOP: (NativeToastAndroid.getConstants().TOP: number),
   BOTTOM: (NativeToastAndroid.getConstants().BOTTOM: number),
   CENTER: (NativeToastAndroid.getConstants().CENTER: number),
-
+  // 以show函数的实现为例⼦，其内部式通过调⽤NativeToastAndroid的实现代码，执⾏，
   show: function(message: string, duration: number): void {
     NativeToastAndroid.show(message, duration);
   },

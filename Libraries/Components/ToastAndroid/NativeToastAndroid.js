@@ -36,4 +36,6 @@ export interface Spec extends TurboModule {
   ) => void;
 }
 
+// 最主要的实现代码是最后的⼀⾏，export导出对象
+// 继续深⼊到TurboModuleRegistry.js⽂件的内⼊
 export default (TurboModuleRegistry.getEnforcing<Spec>('ToastAndroid'): Spec);

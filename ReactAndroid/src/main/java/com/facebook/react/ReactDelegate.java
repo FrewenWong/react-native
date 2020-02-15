@@ -19,6 +19,7 @@ import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
 /**
  * A delegate for handling React Application support. This delegate is unaware whether it is used in
  * an {@link Activity} or a {@link android.app.Fragment}.
+ * ReactNative的业务逻辑的委托对象
  */
 public class ReactDelegate {
 
@@ -94,12 +95,19 @@ public class ReactDelegate {
   public void loadApp() {
     loadApp(mMainComponentName);
   }
-
+  /**
+   * loadApp的方法传入
+   * 
+   */
   public void loadApp(String appKey) {
     if (mReactRootView != null) {
       throw new IllegalStateException("Cannot loadApp while app is already running.");
     }
+    // 创建rootView.实例化ReactRootView
+    // ReactRootView作为整个RN应用的根视图，通过调用ReactRootView.startReactApplication()方法启动RN应用。
     mReactRootView = createRootView();
+    // 调用ReactRootView的startReactApplication的方法
+    // 参数1：ReactInstanceManager 的RN的IntanceManager的对象
     mReactRootView.startReactApplication(
         getReactNativeHost().getReactInstanceManager(), appKey, mLaunchOptions);
   }

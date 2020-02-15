@@ -33,6 +33,7 @@ public interface ReactRoot {
   void setRootViewTag(int rootViewTag);
 
   /** Calls into JS to start the React application. */
+  // 我们看这个方法里面的注释：调用JS层执行启动RN的Application
   void runApplication();
 
   /** Handler for stages {@link com.facebook.react.surface.ReactStage} */

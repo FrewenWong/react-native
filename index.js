@@ -105,6 +105,10 @@ export type HostComponent<T> = _HostComponentInternal<T>;
 const invariant = require('invariant');
 const warnOnce = require('./Libraries/Utilities/warnOnce');
 
+/**
+ * module.exports
+ * 这个字段内容可以找到react-native模块导出的所有模块名称，已经模块对应的代码 路径
+ */
 module.exports = {
   // Components
   get AccessibilityInfo(): AccessibilityInfo {
@@ -113,6 +117,7 @@ module.exports = {
   get ActivityIndicator(): ActivityIndicator {
     return require('./Libraries/Components/ActivityIndicator/ActivityIndicator');
   },
+  // 这个额ReactNative导出的Button
   get Button(): Button {
     return require('./Libraries/Components/Button');
   },
@@ -379,6 +384,8 @@ module.exports = {
   get Systrace(): Systrace {
     return require('./Libraries/Performance/Systrace');
   },
+  // 从上⾯代码可以看到import的内部本质其实是调⽤了require，
+  // 接下来直接去看 ToastAndroid(ToastAndroid.android.js)源⽂件
   get ToastAndroid(): ToastAndroid {
     return require('./Libraries/Components/ToastAndroid/ToastAndroid');
   },

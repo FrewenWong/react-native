@@ -20,6 +20,7 @@ export function get<T: TurboModule>(name: string): ?T {
   // Bridgeless mode requires TurboModules
   if (!global.RN$Bridgeless) {
     // Backward compatibility layer during migration.
+    // 主要的代码其实是通过 NativeModules对象来获取对应的module，通过这个module取执⾏show⽅法
     const legacyModule = NativeModules[name];
     if (legacyModule != null) {
       return ((legacyModule: any): T);
@@ -35,6 +36,7 @@ export function get<T: TurboModule>(name: string): ?T {
 }
 
 export function getEnforcing<T: TurboModule>(name: string): T {
+  // 通过名称来获取module
   const module = get(name);
   invariant(
     module != null,

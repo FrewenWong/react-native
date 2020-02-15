@@ -204,16 +204,22 @@ void CatalystInstanceImpl::jniRegisterSegment(
     const std::string &path) {
   instance_->registerBundle((uint32_t)segmentId, path);
 }
-
+/**
+ * 加载使用AssetManager来加载JSBundle
+ **/ 
 void CatalystInstanceImpl::jniLoadScriptFromAssets(
     jni::alias_ref<JAssetManager::javaobject> assetManager,
     const std::string &assetURL,
     bool loadSynchronously) {
   const int kAssetsLength = 9; // strlen("assets://");
+  // 获取source js Bundle的路径名，这里默认的就是index.android.bundle
   auto sourceURL = assetURL.substr(kAssetsLength);
-
+  // assetManager是Java层传递过来的AssetManager，调用JSLoader.cpp里的extractAssetManager()方法
+  // extractAssetManager()再调用android/asset_manager_jni.h里的AAssetManager_fromJava()方法获取AAssetManager对象。
   auto manager = extractAssetManager(assetManager);
+  // 调用JSLoader.cpp的loadScriptFromAssets()方法读取JS Bundle里的内容。
   auto script = loadScriptFromAssets(manager, sourceURL);
+  // 判断是不是unbundle命令打包，build.gradle默认里是bundle打包方式。
   if (JniJSModulesUnbundle::isUnbundle(manager, sourceURL)) {
     auto bundle = JniJSModulesUnbundle::fromEntryFile(manager, sourceURL);
     auto registry = RAMBundleRegistry::singleBundleRegistry(std::move(bundle));
@@ -223,6 +229,8 @@ void CatalystInstanceImpl::jniLoadScriptFromAssets(
   } else if (Instance::isIndexedRAMBundle(&script)) {
     instance_->loadRAMBundleFromString(std::move(script), sourceURL);
   } else {
+    // bundle命令打包走次流程，instance_是Instan.h中类的实例。
+    // 接着会调用Instance.cpp的loadScriptFromString()方法去解析JS Bundle里的内容。
     instance_->loadScriptFromString(
         std::move(script), sourceURL, loadSynchronously);
   }

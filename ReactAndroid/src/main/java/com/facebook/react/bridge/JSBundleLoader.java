@@ -13,6 +13,8 @@ import com.facebook.react.common.DebugServerException;
 /**
  * A class that stores JS bundle information and allows a {@link JSBundleLoaderDelegate} (e.g.
  * {@link CatalystInstance}) to load a correct bundle through {@link ReactBridge}.
+ * 
+ * 
  */
 public abstract class JSBundleLoader {
 
@@ -20,6 +22,7 @@ public abstract class JSBundleLoader {
    * This loader is recommended one for release version of your app. In that case local JS executor
    * should be used. JS bundle will be read from assets in native code to save on passing large
    * strings from java to native memory.
+   * 调用CatalystInstanceImpl.loadScriptFromAssets()方法去加载JS Bundle
    */
   public static JSBundleLoader createAssetLoader(
       final Context context, final String assetUrl, final boolean loadSynchronously) {

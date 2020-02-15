@@ -176,6 +176,7 @@ const AppRegistry = {
   },
 
   /**
+   * 上面代码最终调用的就是这个函数.这里就执行到JS逻辑的代码
    * Loads the JavaScript bundle and runs the app.
    *
    * See http://facebook.github.io/react-native/docs/appregistry.html#runapplication

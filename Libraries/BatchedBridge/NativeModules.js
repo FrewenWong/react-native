@@ -9,13 +9,16 @@
  */
 
 'use strict';
-
+//  const BatchedBridge = require('./BatchedBridge');
 const BatchedBridge = require('./BatchedBridge');
 
 const invariant = require('invariant');
 
 import type {ExtendedError} from '../Core/Devtools/parseErrorStack';
 
+/**
+ * ⼀个关键的数据结构，为了理解⼏个全局导出对象
+ */
 export type ModuleConfig = [
   string /* name */,
   ?Object /* constants */,
@@ -161,10 +164,12 @@ function updateErrorWithErrorData(
   return Object.assign(error, errorData || {});
 }
 
+// 声明一个NativeModules对象
 let NativeModules: {[moduleName: string]: Object, ...} = {};
 if (global.nativeModuleProxy) {
   NativeModules = global.nativeModuleProxy;
 } else if (!global.nativeExtensions) {
+  // 
   const bridgeConfig = global.__fbBatchedBridgeConfig;
   invariant(
     bridgeConfig,
@@ -173,9 +178,11 @@ if (global.nativeModuleProxy) {
 
   const defineLazyObjectProperty = require('../Utilities/defineLazyObjectProperty');
   (bridgeConfig.remoteModuleConfig || []).forEach(
+    // 执行的Module的遍历
     (config: ModuleConfig, moduleID: number) => {
       // Initially this config will only contain the module name when running in JSC. The actual
       // configuration of the module will be lazily loaded.
+      // 
       const info = genModule(config, moduleID);
       if (!info) {
         return;
@@ -193,5 +200,5 @@ if (global.nativeModuleProxy) {
     },
   );
 }
-
+// 导出的对象
 module.exports = NativeModules;

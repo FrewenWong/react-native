@@ -23,6 +23,8 @@ import com.facebook.react.modules.core.PermissionListener;
  * Delegate class for {@link ReactActivity} and {@link ReactFragmentActivity}. You can subclass this
  * to provide custom implementations for e.g. {@link #getReactNativeHost()}, if your Application
  * class doesn't implement {@link ReactApplication}.
+ * Activity的委托对象。留在MainActivity里面的进行实例化使用。这个类还是一个封装类
+ * 真正的委托对象还是ReactDelegate
  */
 public class ReactActivityDelegate {
 
@@ -31,8 +33,13 @@ public class ReactActivityDelegate {
 
   private @Nullable PermissionListener mPermissionListener;
   private @Nullable Callback mPermissionsCallback;
+  /**
+   * 真正的委托对象还是ReactDelegate
+   */
   private ReactDelegate mReactDelegate;
-
+  /**
+   * 实例化ReactActivityDelegate构造函数
+   */
   @Deprecated
   public ReactActivityDelegate(Activity activity, @Nullable String mainComponentName) {
     mActivity = activity;
@@ -48,7 +55,11 @@ public class ReactActivityDelegate {
     return null;
   }
 
+  /**
+   * createRootView传入的生成的传入Activity的ContentView
+   */
   protected ReactRootView createRootView() {
+    // 实例化ReactRootView
     return new ReactRootView(getContext());
   }
 
@@ -68,26 +79,35 @@ public class ReactActivityDelegate {
   }
 
   public String getMainComponentName() {
+    // MainCompoenentName 是在Activity里面传递过来的。
     return mMainComponentName;
   }
 
   protected void onCreate(Bundle savedInstanceState) {
+    // 获取组件对象名称
     String mainComponentName = getMainComponentName();
+    // 实例化ReactDelegate对象
     mReactDelegate =
         new ReactDelegate(
             getPlainActivity(), getReactNativeHost(), mainComponentName, getLaunchOptions()) {
           @Override
           protected ReactRootView createRootView() {
+            // 通过createRootView的createRootView的传入ReactRootView
+            // 这个就是我们调用调用Activity的setContentView
             return ReactActivityDelegate.this.createRootView();
           }
         };
+    // 如果当mainComponentName的不为null    
     if (mMainComponentName != null) {
+      // 加载App页面。主要就是loadApp、设置ContentView
       loadApp(mainComponentName);
     }
   }
 
   protected void loadApp(String appKey) {
+    // 盗用ReactNative的调用委托对象的loadApp
     mReactDelegate.loadApp(appKey);
+    // 
     getPlainActivity().setContentView(mReactDelegate.getReactRootView());
   }
 

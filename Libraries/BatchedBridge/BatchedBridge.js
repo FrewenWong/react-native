@@ -11,7 +11,7 @@
 'use strict';
 
 const MessageQueue = require('./MessageQueue');
-
+// Message对象
 const BatchedBridge: MessageQueue = new MessageQueue();
 
 // Wire up the batched bridge on the global object so that we can call into it.

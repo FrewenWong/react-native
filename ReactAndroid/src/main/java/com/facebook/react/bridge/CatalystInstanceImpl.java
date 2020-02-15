@@ -125,12 +125,13 @@ public class CatalystInstanceImpl implements CatalystInstance {
       NativeModuleCallExceptionHandler nativeModuleCallExceptionHandler) {
     Log.d(ReactConstants.TAG, "Initializing React Xplat Bridge.");
     Systrace.beginSection(TRACE_TAG_REACT_JAVA_BRIDGE, "createCatalystInstanceImpl");
-
+    //Native方法，用来创建JNI相关状态，并返回mHybridData。
     mHybridData = initHybrid();
-
+    // RN中的三个线程：Native Modules Thread、JS Thread、UI Thread，都是通过Handler来管理的。
     mReactQueueConfiguration =
         ReactQueueConfigurationImpl.create(
             reactQueueConfigurationSpec, new NativeExceptionHandler());
+            
     mBridgeIdleListeners = new CopyOnWriteArrayList<>();
     mNativeModuleRegistry = nativeModuleRegistry;
     mJSModuleRegistry = new JavaScriptModuleRegistry();
@@ -142,6 +143,14 @@ public class CatalystInstanceImpl implements CatalystInstance {
 
     Log.d(ReactConstants.TAG, "Initializing React Xplat Bridge before initializeBridge");
     Systrace.beginSection(TRACE_TAG_REACT_JAVA_BRIDGE, "initializeCxxBridge");
+    // Native方法，调用initializeBridge()方法，并创建BridgeCallback实例，初始化Bridge。
+    // ReactCallback callback：CatalystInstanceImpl的静态内部类ReactCallback，负责接口回调。
+    // JavaScriptExecutor jsExecutor：JS执行器，将JS的调用传递给C++层。
+    // MessageQueueThread jsQueue.getJSQueueThread()：JS线程，通过mReactQueueConfiguration.getJSQueueThread()获得，
+    // mReactQueueConfiguration通过ReactQueueConfigurationSpec.createDefault()创建。
+    // MessageQueueThread moduleQueue：Native线程，通过mReactQueueConfiguration.getNativeModulesQueueThread()获得，
+    // Collection<JavaModuleWrapper> javaModules：java modules，来源于mJavaRegistry.getJavaModules(this)。
+    // Collection<ModuleHolder> cxxModules)：c++ modules，来源于mJavaRegistry.getCxxModules()。
     initializeBridge(
         new BridgeCallback(this),
         jsExecutor,
@@ -232,6 +241,8 @@ public class CatalystInstanceImpl implements CatalystInstance {
   public void loadScriptFromAssets(
       AssetManager assetManager, String assetURL, boolean loadSynchronously) {
     mSourceURL = assetURL;
+    // CatalystInstanceImpl.java最终还是调用C++层的CatalystInstanceImpl.
+    // cpp去加载JS Bundle，我们去C++层看一下实现。
     jniLoadScriptFromAssets(assetManager, assetURL, loadSynchronously);
   }
 
@@ -244,18 +255,25 @@ public class CatalystInstanceImpl implements CatalystInstance {
   private native void jniSetSourceURL(String sourceURL);
 
   private native void jniRegisterSegment(int segmentId, String path);
-
+  /**
+   * 调用C++层的去加载JSBundle
+   */
   private native void jniLoadScriptFromAssets(
       AssetManager assetManager, String assetURL, boolean loadSynchronously);
 
   private native void jniLoadScriptFromFile(
       String fileName, String sourceURL, boolean loadSynchronously);
 
+  /**
+   * runJSBundle
+   * 调用CatalystInstance.runJSBundle()去加载JS Bundle
+   */
   @Override
   public void runJSBundle() {
     Log.d(ReactConstants.TAG, "CatalystInstanceImpl.runJSBundle()");
     Assertions.assertCondition(!mJSBundleHasLoaded, "JS bundle was already loaded!");
     // incrementPendingJSCalls();
+    // JSBundleLoader调用调用加载器加载JS Bundle，不同情况下加载器各不相同。
     mJSBundleLoader.loadScript(CatalystInstanceImpl.this);
 
     synchronized (mJSCallsPendingInitLock) {
@@ -549,8 +567,12 @@ public class CatalystInstanceImpl implements CatalystInstance {
     return mReactQueueConfiguration;
   }
 
+  /**
+   * 获取JSModule
+   */
   @Override
   public <T extends JavaScriptModule> T getJSModule(Class<T> jsInterface) {
+    // 从JSModuleRegistry里面来获取JavaScriptModule
     return mJSModuleRegistry.getJavaScriptModule(this, jsInterface);
   }
 

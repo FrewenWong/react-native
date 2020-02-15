@@ -20,6 +20,7 @@ import com.facebook.proguard.annotations.DoNotStrip;
  *
  * <p>NB: JavaScriptModule does not allow method name overloading because JS does not allow method
  * name overloading.
+ * JavaScriptModule是JS Module，负责JS到Java的映射调用格式声明，由CatalystInstance统一管理。
  */
 @DoNotStrip
 public interface JavaScriptModule {}

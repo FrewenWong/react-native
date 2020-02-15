@@ -20,6 +20,7 @@ import java.util.Set;
  * Class responsible for holding all the {@link JavaScriptModule}s. Uses Java proxy objects to
  * dispatch method calls on JavaScriptModules to the bridge using the corresponding module and
  * method ids so the proper function is executed in JavaScript.
+ * JavascriptModuleRegistry是JS Module映射表，NativeModuleRegistry是Java Module映射表
  */
 public final class JavaScriptModuleRegistry {
   private final HashMap<Class<? extends JavaScriptModule>, JavaScriptModule> mModuleInstances;
@@ -28,6 +29,10 @@ public final class JavaScriptModuleRegistry {
     mModuleInstances = new HashMap<>();
   }
 
+  /**
+   * JavaScriptModule的实例化方法。
+   * 我们可以看到这个地方使用的动态代理
+   */
   public synchronized <T extends JavaScriptModule> T getJavaScriptModule(
       CatalystInstance instance, Class<T> moduleInterface) {
     JavaScriptModule module = mModuleInstances.get(moduleInterface);

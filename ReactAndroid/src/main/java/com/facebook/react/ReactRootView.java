@@ -67,6 +67,10 @@ import com.facebook.systrace.Systrace;
  * event, this view's {@link View#onTouchEvent} will still return true in order to be notified about
  * all subsequent touch events related to that gesture (in case when JS code wants to handle that
  * gesture).
+ * ReactNativeView的就是继承自FrameLayout的View
+ * 传入给Activity
+ * 
+ * 
  */
 public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
 
@@ -358,7 +362,11 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
   }
 
   /** {@see #startReactApplication(ReactInstanceManager, String, android.os.Bundle)} */
+  /**
+   * 为什么在要在ReactRootView里面来进行初始化RN的Application
+   */
   public void startReactApplication(ReactInstanceManager reactInstanceManager, String moduleName) {
+    // 启动RN的Application
     startReactApplication(reactInstanceManager, moduleName, null);
   }
 
@@ -392,8 +400,9 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
       Assertions.assertCondition(
           mReactInstanceManager == null,
           "This root view has already been attached to a catalyst instance manager");
-
+      // reactInstanceManager这个对象。这个类也是比较重要的
       mReactInstanceManager = reactInstanceManager;
+      // 传入moduleName的。就是ReactActivity的里面的getMainComponentName
       mJSModuleName = moduleName;
       mAppProperties = initialProperties;
       mInitialUITemplate = initialUITemplate;
@@ -401,7 +410,7 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
       if (mUseSurface) {
         // TODO initialize surface here
       }
-
+      // 这个地方就是在后台创建ReactContext上下文对象
       mReactInstanceManager.createReactContextInBackground();
 
       attachToReactInstanceManager();
@@ -576,6 +585,7 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
       }
 
       CatalystInstance catalystInstance = reactContext.getCatalystInstance();
+      // 获取JS的ModuleName
       String jsAppModuleName = getJSModuleName();
 
       if (mUseSurface) {
@@ -593,7 +603,7 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
         }
 
         mShouldLogContentAppeared = true;
-
+        // 这里我们就是调用了JS暴露给Java的接口方法
         catalystInstance.getJSModule(AppRegistry.class).runApplication(jsAppModuleName, appParams);
       }
     } finally {

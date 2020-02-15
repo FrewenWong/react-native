@@ -75,6 +75,7 @@ void Instance::loadApplicationSync(
   m_syncCV.wait(lock, [this] { return m_syncReady; });
 
   SystraceSection s("Instance::loadApplicationSync", "sourceURL", sourceURL);
+  //nativeToJsBridge_也是在Instance::initializeBridget()方法里初始化的，具体实现在NativeToJsBridge.cpp里。
   nativeToJsBridge_->loadApplicationSync(
       std::move(bundleRegistry), std::move(string), std::move(sourceURL));
 }

@@ -17,12 +17,19 @@ import com.facebook.react.modules.core.PermissionAwareActivity;
 import com.facebook.react.modules.core.PermissionListener;
 
 /** Base Activity for React Native applications. */
+/**
+ * 我们要求继承自ReactActivity。这个就是我们继承自AppCompatActivity。
+ * 所以我们就是在这个Activity里面实例化ReactRootView
+ */
 public abstract class ReactActivity extends AppCompatActivity
     implements DefaultHardwareBackBtnHandler, PermissionAwareActivity {
-
+  /**
+   * 这个就是ReactNative的委托对象。然后
+   */
   private final ReactActivityDelegate mDelegate;
 
   protected ReactActivity() {
+    // 实例化ReactActivityDelegate委托对象
     mDelegate = createReactActivityDelegate();
   }
 
@@ -36,12 +43,14 @@ public abstract class ReactActivity extends AppCompatActivity
 
   /** Called at construction time, override if you have a custom delegate implementation. */
   protected ReactActivityDelegate createReactActivityDelegate() {
+    // 实例化ReactActivityDelegate
     return new ReactActivityDelegate(this, getMainComponentName());
   }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    // onCreate的委托对象
     mDelegate.onCreate(savedInstanceState);
   }
 
