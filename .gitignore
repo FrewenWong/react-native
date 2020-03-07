@@ -93,3 +93,9 @@ RNTester/Pods/*
 # Visual studio
 .vscode
 .vs
+/ReactAndroid/.project
+/RNTester/android/app/.project
+/template/android/.project
+/ReactAndroid/.settings/org.eclipse.buildship.core.prefs
+/RNTester/android/app/.settings/org.eclipse.buildship.core.prefs
+/template/android/.settings/org.eclipse.buildship.core.prefs

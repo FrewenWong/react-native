@@ -31,7 +31,6 @@ function performanceNow() {
  * external clock signal, all that's stored here is timerID, timer type, and
  * callback.
  */
-
 export type JSTimerType =
   | 'setTimeout'
   | 'setInterval'
@@ -67,6 +66,7 @@ let hasEmittedTimeDriftWarning = false;
 
 // Returns a free index if one is available, and the next consecutive index otherwise.
 function _getFreeIndex(): number {
+  // 这个是判断这个Index的数组中是否有空闲的位置，有进行复用
   let freeIndex = timerIDs.indexOf(null);
   if (freeIndex === -1) {
     freeIndex = timerIDs.length;
@@ -74,11 +74,23 @@ function _getFreeIndex(): number {
   return freeIndex;
 }
 
+/**
+ * 进行分配回调的的空间
+ * @param func
+ * @param type
+ * @returns {number}
+ * @private
+ */
 function _allocateCallback(func: Function, type: JSTimerType): number {
+  // 进行ID的分配
   const id = GUID++;
+  // 获取的Free的Index。机型空间空间的数组
   const freeIndex = _getFreeIndex();
+  // 存储ID
   timerIDs[freeIndex] = id;
+  // 存储回调callback
   callbacks[freeIndex] = func;
+  // 测试类型
   types[freeIndex] = type;
   return id;
 }
@@ -101,10 +113,11 @@ function _callTimer(timerID: number, frameTime: number, didTimeout: ?boolean) {
   // fired. In both cases we want to ignore the timer id, but in the former
   // case we warn as well.
   const timerIndex = timerIDs.indexOf(timerID);
+  // 如果之前缓存的ID不存在，则直接返回
   if (timerIndex === -1) {
     return;
   }
-
+  // 获取这个Timer的type类型，以及回调方法
   const type = types[timerIndex];
   const callback = callbacks[timerIndex];
   if (!callback || !type) {
@@ -117,6 +130,7 @@ function _callTimer(timerID: number, frameTime: number, didTimeout: ?boolean) {
   }
 
   // Clear the metadata
+  // 如果是下面四个类型的Timer。则我们清除掉的所有的数组数据
   if (
     type === 'setTimeout' ||
     type === 'setImmediate' ||
@@ -132,6 +146,7 @@ function _callTimer(timerID: number, frameTime: number, didTimeout: ?boolean) {
       type === 'setInterval' ||
       type === 'setImmediate'
     ) {
+      // 并将这个方法回调出去
       callback();
     } else if (type === 'requestAnimationFrame') {
       callback(performanceNow());
@@ -234,10 +249,12 @@ const JSTimers = {
           'ms)',
       );
     }
+    // 申请回调的方法的空间，类型是setTimeout
     const id = _allocateCallback(
       () => func.apply(undefined, args),
       'setTimeout',
     );
+    // 进行Timer的创建。所以这个方法是比较重要的
     createTimer(id, duration || 0, Date.now(), /* recurring */ false);
     return id;
   },
@@ -374,6 +391,11 @@ const JSTimers = {
   /**
    * This is called from the native side. We are passed an array of timerIDs,
    * and
+   * 这个方法就是从Native侧回调到JS侧的Java的回调方法。
+   * 具体是怎么回调过来的呢？？我们找个时间好好讲一下。
+   * 
+   * 我们从这个入参也可以看到确实一次性将多个Timer的回调过来
+   * 
    */
   callTimers: function(timersToCall: Array<number>) {
     invariant(
@@ -465,6 +487,13 @@ const JSTimers = {
   },
 };
 
+/**
+ * 进行Timer的的创建
+ * @param callbackID  传入ID
+ * @param duration  传入时长
+ * @param jsSchedulingTime  JS开始执行的时间
+ * @param repeats
+ */
 function createTimer(
   callbackID: number,
   duration: number,

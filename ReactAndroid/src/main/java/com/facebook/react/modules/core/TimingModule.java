@@ -21,7 +21,11 @@ import com.facebook.react.module.annotations.ReactModule;
 @ReactModule(name = TimingModule.NAME)
 public final class TimingModule extends ReactContextBaseJavaModule
     implements LifecycleEventListener, HeadlessJsTaskEventListener {
-
+    
+  /**
+   * BridgeTimerManager 继承自JavaScriptTimerManager 主要将到时间的Timer回调的JS侧
+   * 
+   * */   
   public class BridgeTimerManager implements JavaScriptTimerManager {
     @Override
     public void callTimers(WritableArray timerIDs) {
@@ -57,7 +61,7 @@ public final class TimingModule extends ReactContextBaseJavaModule
 
   public TimingModule(ReactApplicationContext reactContext, DevSupportManager devSupportManager) {
     super(reactContext);
-
+    // 实例化JavaTimerManager。真正Timer的逻辑其实都是在这里面处理
     mJavaTimerManager =
         new JavaTimerManager(
             reactContext,
@@ -85,6 +89,7 @@ public final class TimingModule extends ReactContextBaseJavaModule
       final int duration,
       final double jsSchedulingTime,
       final boolean repeat) {
+    // 我们看到这里其实调用的是JavaTimerManager 创建并调用计时器
     mJavaTimerManager.createAndMaybeCallTimer(callbackID, duration, jsSchedulingTime, repeat);
   }
 

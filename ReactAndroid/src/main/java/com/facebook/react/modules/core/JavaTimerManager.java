@@ -36,6 +36,10 @@ public class JavaTimerManager {
   // at 60 fps.
   private static final float FRAME_DURATION_MS = 1000.f / 60.f;
 
+  /**
+   * 这个Timer的对象，我们可以看到很简单
+   * 其实就是一个简单的实体对象
+   */
   private static class Timer {
     private final int mCallbackID;
     private final boolean mRepeat;
@@ -49,7 +53,11 @@ public class JavaTimerManager {
       mRepeat = repeat;
     }
   }
-
+  /**
+   * 那既然，我们在优先级队列里面存入Timer的实体。那么我们什么时候把他取出来的？？
+   * 怎么让他在规定的时间进行回调回去呢？？
+   * 就是下面这个方法了！！！
+   */
   private class TimerFrameCallback extends ChoreographerCompat.FrameCallback {
 
     // Temporary map for constructing the individual arrays of timers to call
@@ -63,22 +71,31 @@ public class JavaTimerManager {
       }
 
       long frameTimeMillis = frameTimeNanos / 1000000;
+      // 
       synchronized (mTimerGuard) {
+        // 我们知道doFrame是每隔？毫秒。然后就可以就行队列里面的数据取出来
+        // 这个方法不是一个阻塞式的方法。就是每一次回调doFrame方法，都讲这个队列中所有已经到时间的Timer取出来
+        // 一次性回调除去
         while (!mTimers.isEmpty() && mTimers.peek().mTargetTime < frameTimeMillis) {
+          // 从队列里面里面期初一个Timer
           Timer timer = mTimers.poll();
           if (mTimersToCall == null) {
             mTimersToCall = Arguments.createArray();
           }
+          // 将 Timer的CallbackID加入到数组总
           mTimersToCall.pushInt(timer.mCallbackID);
+          // 判断timer是否是一个重复的，如果是的话。再将这个入TImer入队列。
+          // 但是不影响这次的回调执行
           if (timer.mRepeat) {
             timer.mTargetTime = frameTimeMillis + timer.mInterval;
             mTimers.add(timer);
           } else {
+            // 如果非重复，则移除
             mTimerIdsToTimers.remove(timer.mCallbackID);
           }
         }
       }
-
+      // 调用mJavaScriptTimerManager的callTimers的进行，将所有的满足的Timer的返回除去
       if (mTimersToCall != null) {
         mJavaScriptTimerManager.callTimers(mTimersToCall);
         mTimersToCall = null;
@@ -153,8 +170,10 @@ public class JavaTimerManager {
   private final JavaScriptTimerManager mJavaScriptTimerManager;
   private final ReactChoreographer mReactChoreographer;
   private final DevSupportManager mDevSupportManager;
+  /// JavaTimerManager里面的锁对象，主要锁入队列、合出队列的的逻辑
   private final Object mTimerGuard = new Object();
   private final Object mIdleCallbackGuard = new Object();
+  // 这个是一个优先级对象。这样就可以使得从timer在入队列的时候按照时间的先后顺序
   private final PriorityQueue<Timer> mTimers;
   private final SparseArray<Timer> mTimerIdsToTimers;
   private final AtomicBoolean isPaused = new AtomicBoolean(true);
@@ -166,6 +185,10 @@ public class JavaTimerManager {
   private boolean mFrameIdleCallbackPosted = false;
   private boolean mSendIdleEvents = false;
 
+  /**
+   * 我们看第一个参数mJavaScriptTimerManager构造函数参数
+   * 这个就是TimingModule的中传入的，主要用来负责将到时间的Timer回调到JS侧
+   */
   public JavaTimerManager(
       ReactApplicationContext reactContext,
       JavaScriptTimerManager javaScriptTimerManager,
@@ -177,12 +200,14 @@ public class JavaTimerManager {
     mDevSupportManager = devSupportManager;
 
     // We store timers sorted by finish time.
+    // 我们来进行优先级队列的实例化，其实就是按照结束时间的
     mTimers =
         new PriorityQueue<Timer>(
             11, // Default capacity: for some reason they don't expose a (Comparator) constructor
             new Comparator<Timer>() {
               @Override
               public int compare(Timer lhs, Timer rhs) {
+                // 判断两个Timer的结束时间
                 long diff = lhs.mTargetTime - rhs.mTargetTime;
                 if (diff == 0) {
                   return 0;
@@ -211,6 +236,7 @@ public class JavaTimerManager {
     isPaused.set(false);
     // TODO(5195192) Investigate possible problems related to restarting all tasks at the same
     // moment
+    // 
     setChoreographerCallback();
     maybeSetChoreographerIdleCallback();
   }
@@ -251,6 +277,9 @@ public class JavaTimerManager {
     }
   }
 
+  /**
+   * 设置Choreographer的Callback的犯法
+   */
   private void setChoreographerCallback() {
     if (!mFrameCallbackPosted) {
       mReactChoreographer.postFrameCallback(
@@ -294,9 +323,12 @@ public class JavaTimerManager {
    * @param repeat Whether the timer should be repeated (used for setInterval).
    */
   public void createTimer(final int callbackID, final long delay, final boolean repeat) {
+    // 实例化Timer触发的时机
     long initialTargetTime = SystemClock.nanoTime() / 1000000 + delay;
+    // 创建一个Timer对象
     Timer timer = new Timer(callbackID, initialTargetTime, (int) delay, repeat);
     synchronized (mTimerGuard) {
+      // 然后将
       mTimers.add(timer);
       mTimerIdsToTimers.put(callbackID, timer);
     }
@@ -316,12 +348,15 @@ public class JavaTimerManager {
       final int duration,
       final double jsSchedulingTime,
       final boolean repeat) {
+    // Java虚拟机的本地时间    
     long deviceTime = SystemClock.currentTimeMillis();
+    // 这个我们很熟悉，其实就是JS那边传递过来的时间
     long remoteTime = (long) jsSchedulingTime;
 
     // If the times on the server and device have drifted throw an exception to warn the developer
     // that things might not work or results may not be accurate. This is required only for
     // developer builds.
+    // 开发模式下，进行对时的异常告警
     if (mDevSupportManager.getDevSupportEnabled()) {
       long driftTime = Math.abs(remoteTime - deviceTime);
       if (driftTime > 60000) {
@@ -333,13 +368,14 @@ public class JavaTimerManager {
 
     // Adjust for the amount of time it took for native to receive the timer registration call
     long adjustedDuration = Math.max(0, remoteTime - deviceTime + duration);
+    // 如果Timer的回调时长为0 
     if (duration == 0 && !repeat) {
       WritableArray timerToCall = Arguments.createArray();
       timerToCall.pushInt(callbackID);
       mJavaScriptTimerManager.callTimers(timerToCall);
       return;
     }
-
+    // 创建计时器
     createTimer(callbackID, adjustedDuration, repeat);
   }
 
