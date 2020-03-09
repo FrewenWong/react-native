@@ -47,7 +47,10 @@ public class ReactActivityDelegate {
   protected @Nullable Bundle getLaunchOptions() {
     return null;
   }
-
+  /**
+   * createRootView
+   * 创建ReactRootView作为根视图,它本质上是一个FrameLayout
+   */
   protected ReactRootView createRootView() {
     return new ReactRootView(getContext());
   }
@@ -81,7 +84,9 @@ public class ReactActivityDelegate {
             return ReactActivityDelegate.this.createRootView();
           }
         };
+    //mMainComponentName就是上面ReactActivity.getMainComponentName()返回的组件名    
     if (mMainComponentName != null) {
+      //载入app页面
       loadApp(mainComponentName);
     }
   }

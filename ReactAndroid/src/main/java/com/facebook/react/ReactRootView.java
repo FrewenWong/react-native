@@ -384,6 +384,7 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
       @Nullable String initialUITemplate) {
     Systrace.beginSection(TRACE_TAG_REACT_JAVA_BRIDGE, "startReactApplication");
     try {
+      // 线程检查
       UiThreadUtil.assertOnUiThread();
 
       // TODO(6788889): Use POJO instead of bundle here, apparently we can't just use WritableMap
@@ -401,9 +402,9 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
       if (mUseSurface) {
         // TODO initialize surface here
       }
-
+      //创建RN应用上下文
       mReactInstanceManager.createReactContextInBackground();
-
+      //attachToReactInstanceManager 调用的是mReactInstanceManager.attachRootView(this)
       attachToReactInstanceManager();
 
     } finally {
@@ -551,6 +552,8 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
   /**
    * Calls into JS to start the React application. Can be called multiple times with the same
    * rootTag, which will re-render the application from the root.
+   * 这个方法就是在ReactInstanceManager.setupReactContext()方法中来进行启动runApplication
+   * 启动流程入口：由Java层调用启动
    */
   @Override
   public void runApplication() {
@@ -583,7 +586,8 @@ public class ReactRootView extends FrameLayout implements RootView, ReactRoot {
         }
 
         mShouldLogContentAppeared = true;
-
+        //调用catalystInstance.getJSModule(AppRegistry.class).runApplication(jsAppModuleName, appParams)
+        // AppRegistry.class是JS层暴露给Java层的接口方法。它的真正实现在AppRegistry.js里，AppRegistry.js是运行所有RN应用的JS层入口，我们来看看它的实现
         catalystInstance.getJSModule(AppRegistry.class).runApplication(jsAppModuleName, appParams);
       }
     } finally {

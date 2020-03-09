@@ -16,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 
 /** A set of Java APIs to expose to a particular JavaScript instance. */
+/**
+ * NativeModuleRegistry：Java Module注册表，内部持有Map：Map<Class<? extends NativeModule>, ModuleHolder> mModules，NativeModuleRegistry可以遍历
+并返回Java Module供调用者使用。
+ */
 public class NativeModuleRegistry {
 
   private final ReactApplicationContext mReactApplicationContext;
@@ -37,6 +41,7 @@ public class NativeModuleRegistry {
   }
 
   /* package */ Collection<JavaModuleWrapper> getJavaModules(JSInstance jsInstance) {
+    //传入的是Collection<JavaModuleWrapper> ，JavaModuleWrapper是NativeHolder的一个Wrapper类，它对应了C++层JavaModuleWrapper.cpp.
     ArrayList<JavaModuleWrapper> javaModules = new ArrayList<>();
     for (Map.Entry<String, ModuleHolder> entry : mModules.entrySet()) {
       if (!entry.getValue().isCxxModule()) {

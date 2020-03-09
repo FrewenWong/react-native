@@ -11,14 +11,11 @@ import static com.facebook.infer.annotation.ThreadConfined.UI;
 import static com.facebook.systrace.Systrace.TRACE_TAG_REACT_JAVA_BRIDGE;
 
 import android.content.res.AssetManager;
-import android.os.AsyncTask;
 import android.util.Log;
-import androidx.annotation.Nullable;
 import com.facebook.common.logging.FLog;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.ThreadConfined;
 import com.facebook.jni.HybridData;
-import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.bridge.queue.QueueThreadExceptionHandler;
 import com.facebook.react.bridge.queue.ReactQueueConfiguration;
@@ -69,6 +66,7 @@ public class CatalystInstanceImpl implements CatalystInstance {
       catalystInstance.jniCallJSFunction(mModule, mMethod, arguments);
     }
 
+    @Override
     public String toString() {
       return mModule
           + "."
@@ -113,8 +111,10 @@ public class CatalystInstanceImpl implements CatalystInstance {
 
   private static native HybridData initHybrid();
 
+  @Override
   public native CallInvokerHolderImpl getJSCallInvokerHolder();
 
+  @Override
   public native CallInvokerHolderImpl getNativeCallInvokerHolder();
 
   private CatalystInstanceImpl(
@@ -125,12 +125,13 @@ public class CatalystInstanceImpl implements CatalystInstance {
       NativeModuleCallExceptionHandler nativeModuleCallExceptionHandler) {
     Log.d(ReactConstants.TAG, "Initializing React Xplat Bridge.");
     Systrace.beginSection(TRACE_TAG_REACT_JAVA_BRIDGE, "createCatalystInstanceImpl");
-
+    //Native方法，用来创建JNI相关状态，并返回mHybridData。
     mHybridData = initHybrid();
-
+    //RN中的三个线程：NativeModulesThread、JSThread、UIThread，都是通过Handler来管理的。
     mReactQueueConfiguration =
         ReactQueueConfigurationImpl.create(
             reactQueueConfigurationSpec, new NativeExceptionHandler());
+
     mBridgeIdleListeners = new CopyOnWriteArrayList<>();
     mNativeModuleRegistry = nativeModuleRegistry;
     mJSModuleRegistry = new JavaScriptModuleRegistry();
@@ -142,6 +143,15 @@ public class CatalystInstanceImpl implements CatalystInstance {
 
     Log.d(ReactConstants.TAG, "Initializing React Xplat Bridge before initializeBridge");
     Systrace.beginSection(TRACE_TAG_REACT_JAVA_BRIDGE, "initializeCxxBridge");
+    // 调用initializeBridge()将新创建的JS线程与Native线程传入到C++层。
+    // 并创建BridgeCallback实例，初始化Bridge。
+    //参数一： CatalystInstanceImpl的静态内部类ReactCallback，负责接口回调。
+    //参数一： JS执行器，将JS的调用传递给C++层。 
+    // JS线程，通过mReactQueueConfiguration.getJSQueueThread()获得，mReactQueueConfiguration通过ReactQueueConfigurationSpec.createDefault()创建。
+    // Native线程，通过mReactQueueConfiguration.getNativeModulesQueueThread()获得，mReactQueueConfiguration通过ReactQueueConfigurationSpec.createDefault()创建。
+    // java modules，来源于mJavaRegistry.getJavaModules(this)。
+    // c++ modules，来源于mJavaRegistry.getCxxModules()。
+    // 传入的是Collection<ModuleHolder> ，ModuleHolder是NativeModule的一个Holder类，可以实现NativeModule的懒加载。
     initializeBridge(
         new BridgeCallback(this),
         jsExecutor,
@@ -209,6 +219,10 @@ public class CatalystInstanceImpl implements CatalystInstance {
   private native void jniExtendNativeModules(
       Collection<JavaModuleWrapper> javaModules, Collection<ModuleHolder> cxxModules);
 
+      /**
+       * 我们可以看到这个方法是一个Native的方法。
+       * 那我们就到CatalystInstanceImpl.cpp看一下这个方法的实现
+       */
   private native void initializeBridge(
       ReactCallback callback,
       JavaScriptExecutor jsExecutor,
@@ -232,6 +246,8 @@ public class CatalystInstanceImpl implements CatalystInstance {
   public void loadScriptFromAssets(
       AssetManager assetManager, String assetURL, boolean loadSynchronously) {
     mSourceURL = assetURL;
+    // 调用Jni
+    // 最终还是调用C++层的CatalystInstanceImpl.cpp去加载JS Bundle，我们去C++层看一下实现。
     jniLoadScriptFromAssets(assetManager, assetURL, loadSynchronously);
   }
 
@@ -256,6 +272,7 @@ public class CatalystInstanceImpl implements CatalystInstance {
     Log.d(ReactConstants.TAG, "CatalystInstanceImpl.runJSBundle()");
     Assertions.assertCondition(!mJSBundleHasLoaded, "JS bundle was already loaded!");
     // incrementPendingJSCalls();
+    // 调用加载器加载JS Bundle，不同情况下加载器各不相同。
     mJSBundleLoader.loadScript(CatalystInstanceImpl.this);
 
     synchronized (mJSCallsPendingInitLock) {
@@ -682,6 +699,7 @@ public class CatalystInstanceImpl implements CatalystInstance {
     }
   }
 
+  @Override
   public void setTurboModuleManager(JSIModule module) {
     mTurboModuleRegistry = (TurboModuleRegistry) module;
     mTurboModuleManagerJSIModule = module;

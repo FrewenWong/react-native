@@ -16,6 +16,8 @@ import com.facebook.proguard.annotations.DoNotStrip;
  * ReactContextBaseJavaModule}. {@link NativeModule}s whose implementation is written in C++ must
  * not provide any Java code (so they can be reused on other platforms), and instead should register
  * themselves using {@link CxxModuleWrapper}.
+ * NativeModule：是一个接口，实现了该接口则可以被JS层调用，我们在为JS层提供Java API时通常会继承BaseJavaModule/ReactContextBaseJavaModule，这两个类就
+实现了NativeModule接口。
  */
 @DoNotStrip
 public interface NativeModule {

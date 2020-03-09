@@ -34,6 +34,7 @@ import javax.inject.Provider;
  *
  * <p>Lifecycle events via a {@link LifecycleEventListener} will still always happen on the UI
  * thread.
+ * ModuleHolder：NativeModule的一个Holder类，可以实现NativeModule的懒加载。
  */
 @DoNotStrip
 public class ModuleHolder {

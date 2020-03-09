@@ -138,7 +138,10 @@ void CatalystInstanceImpl::registerNatives() {
 
   JNativeRunnable::registerNatives();
 }
-
+/**
+ *  这个就是对应的CatalystInstanceImpl.java中调用的initializeBridge方法的实现
+ * 
+ **/
 void CatalystInstanceImpl::initializeBridge(
     jni::alias_ref<ReactCallback::javaobject> callback,
     // This executor is actually a factory holder.
@@ -177,7 +180,7 @@ void CatalystInstanceImpl::initializeBridge(
       javaModules,
       cxxModules,
       moduleMessageQueue_));
-
+  // 
   instance_->initializeBridge(
       std::make_unique<JInstanceCallback>(callback, moduleMessageQueue_),
       jseh->getExecutorFactory(),
@@ -212,10 +215,14 @@ void CatalystInstanceImpl::jniLoadScriptFromAssets(
     const std::string &assetURL,
     bool loadSynchronously) {
   const int kAssetsLength = 9; // strlen("assets://");
+  //获取source js Bundle的路径名，这里默认的就是index.android.bundle
   auto sourceURL = assetURL.substr(kAssetsLength);
-
+  //assetManager是Java层传递过来的AssetManager，调用JSLoade.cpo里的extractAssetManager()方法，extractAssetManager()再
+  //调用android/asset_manager_jni.h里的AAssetManager_fromJava()方法获取AAssetManager对象。
   auto manager = extractAssetManager(assetManager);
+  //调用JSLoader.cpp的loadScriptFromAssets()方法读取JS Bundle里的内容。
   auto script = loadScriptFromAssets(manager, sourceURL);
+  //判断是不是unbundle命令打包，build.gradle默认里是bundle打包方式。
   if (JniJSModulesUnbundle::isUnbundle(manager, sourceURL)) {
     auto bundle = JniJSModulesUnbundle::fromEntryFile(manager, sourceURL);
     auto registry = RAMBundleRegistry::singleBundleRegistry(std::move(bundle));
@@ -225,6 +232,7 @@ void CatalystInstanceImpl::jniLoadScriptFromAssets(
   } else if (Instance::isIndexedRAMBundle(&script)) {
     instance_->loadRAMBundleFromString(std::move(script), sourceURL);
   } else {
+    //bundle命令打包走次流程，instance_是Instan.h中类的实例。
     instance_->loadScriptFromString(
         std::move(script), sourceURL, loadSynchronously);
   }

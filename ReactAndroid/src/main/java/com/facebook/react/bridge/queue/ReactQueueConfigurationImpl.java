@@ -17,6 +17,10 @@ public class ReactQueueConfigurationImpl implements ReactQueueConfiguration {
   private final MessageQueueThreadImpl mNativeModulesQueueThread;
   private final MessageQueueThreadImpl mJSQueueThread;
 
+  /**
+   * 我们可以看一下他的构造函数
+   * 上面的ReactQueueConfigurationSpec.createDefault()方法生成了默认的ReactQueueConfigurationSpec，告诉后续流程需要创建Native线程与JS线程，
+   */
   private ReactQueueConfigurationImpl(
       MessageQueueThreadImpl uiQueueThread,
       MessageQueueThreadImpl nativeModulesQueueThread,
@@ -54,22 +58,32 @@ public class ReactQueueConfigurationImpl implements ReactQueueConfiguration {
     }
   }
 
+  /**
+   * 上面的ReactQueueConfigurationSpec.createDefault()方法生成了默认的ReactQueueConfigurationSpec，
+   * 告诉后续流程需要创建Native线程与JS线程，
+   * 
+   * 可以看出，该方法生成UI线程、Native线程与JS线程各自的MessageQueueThreadImpl，
+   * 创建各自对应的线程，并设置相应的ExceptionHandler
+   */
   public static ReactQueueConfigurationImpl create(
       ReactQueueConfigurationSpec spec, QueueThreadExceptionHandler exceptionHandler) {
     Map<MessageQueueThreadSpec, MessageQueueThreadImpl> specsToThreads = MapBuilder.newHashMap();
-
+    // 创建关于UI线程的MessageQueueThreadSpec，并设置ExceptionHandler
     MessageQueueThreadSpec uiThreadSpec = MessageQueueThreadSpec.mainThreadSpec();
+    // 创建UI线程
     MessageQueueThreadImpl uiThread = MessageQueueThreadImpl.create(uiThreadSpec, exceptionHandler);
     specsToThreads.put(uiThreadSpec, uiThread);
-
+    //给JS线程设置ExceptionHandler
     MessageQueueThreadImpl jsThread = specsToThreads.get(spec.getJSQueueThreadSpec());
     if (jsThread == null) {
+      //创建JS线程
       jsThread = MessageQueueThreadImpl.create(spec.getJSQueueThreadSpec(), exceptionHandler);
     }
-
+    //给Native线程设置ExceptionHandler
     MessageQueueThreadImpl nativeModulesThread =
         specsToThreads.get(spec.getNativeModulesQueueThreadSpec());
     if (nativeModulesThread == null) {
+      //创建Native线程
       nativeModulesThread =
           MessageQueueThreadImpl.create(spec.getNativeModulesQueueThreadSpec(), exceptionHandler);
     }

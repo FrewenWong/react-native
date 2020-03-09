@@ -8,12 +8,9 @@
 package com.facebook.react.bridge.queue;
 
 import android.os.Looper;
-import android.os.Process;
-import android.os.SystemClock;
 import android.util.Pair;
 import com.facebook.common.logging.FLog;
 import com.facebook.proguard.annotations.DoNotStrip;
-import com.facebook.react.bridge.AssertionException;
 import com.facebook.react.bridge.SoftAssertions;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.ReactConstants;
@@ -32,6 +29,9 @@ public class MessageQueueThreadImpl implements MessageQueueThread {
   private MessageQueueThreadPerfStats mPerfStats;
   private volatile boolean mIsFinished = false;
 
+  /**
+   * MessageQueueThreadImpl：MessageQueueThread的实现类，3个线程的创建就是在这里完成的。
+   */
   private MessageQueueThreadImpl(
       String name, Looper looper, QueueThreadExceptionHandler exceptionHandler) {
     this(name, looper, exceptionHandler, null);
@@ -166,7 +166,11 @@ public class MessageQueueThreadImpl implements MessageQueueThread {
   public String getName() {
     return mName;
   }
-
+  /**
+   * Native线程与JS线程各自的MessageQueueThreadImpl，创建各自对应的线程，并设置相应的ExceptionHandler，
+   * 我们来看一看线程是如何被创建的。
+   * MessageQueueThreadImpl将线程的创建分为两种情况：UI线程与Background线程，这也对应了MessageQueueThreadSpec里的枚举：
+   */
   public static MessageQueueThreadImpl create(
       MessageQueueThreadSpec spec, QueueThreadExceptionHandler exceptionHandler) {
     switch (spec.getThreadType()) {
@@ -180,8 +184,13 @@ public class MessageQueueThreadImpl implements MessageQueueThread {
   }
 
   /** @return a MessageQueueThreadImpl corresponding to Android's main UI thread. */
+  /**
+   * 创建UI线程
+   */
   private static MessageQueueThreadImpl createForMainThread(
       String name, QueueThreadExceptionHandler exceptionHandler) {
+    //mainLooper是Android UI线程创建时自动创建，保存在Looper的静态变量mMainLooper中，通过
+	  //mainLooper可以向UI线程消息队列发送与界面操作相关的消息
     Looper mainLooper = Looper.getMainLooper();
     final MessageQueueThreadImpl mqt =
         new MessageQueueThreadImpl(name, mainLooper, exceptionHandler);
@@ -210,6 +219,7 @@ public class MessageQueueThreadImpl implements MessageQueueThread {
     final SimpleSettableFuture<Pair<Looper, MessageQueueThreadPerfStats>> dataFuture =
         new SimpleSettableFuture<>();
     long startTimeMillis;
+    //构建新线程实例。线程的名字就是mqt_js(MessageQueueThread_JS)
     Thread bgThread =
         new Thread(
             null,
@@ -217,12 +227,14 @@ public class MessageQueueThreadImpl implements MessageQueueThread {
               @Override
               public void run() {
                 Process.setThreadPriority(Process.THREAD_PRIORITY_DISPLAY);
+                //创建消息循环
                 Looper.prepare();
                 MessageQueueThreadPerfStats stats = new MessageQueueThreadPerfStats();
                 long wallTime = SystemClock.uptimeMillis();
                 long cpuTime = SystemClock.currentThreadTimeMillis();
                 assignToPerfStats(stats, wallTime, cpuTime);
                 dataFuture.set(new Pair<>(Looper.myLooper(), stats));
+                //使新创建的线程进入消息循环
                 Looper.loop();
               }
             },

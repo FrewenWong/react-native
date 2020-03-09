@@ -112,6 +112,7 @@ void NativeToJsBridge::loadApplication(
     std::unique_ptr<RAMBundleRegistry> bundleRegistry,
     std::unique_ptr<const JSBigString> startupScript,
     std::string startupScriptSourceURL) {
+  //获取一个MessageQueueThread，然后在线程中执行一个Task。
   runOnExecutorQueue(
       [this,
        bundleRegistryWrap = folly::makeMoveWrapper(std::move(bundleRegistry)),
@@ -123,6 +124,8 @@ void NativeToJsBridge::loadApplication(
           executor->setBundleRegistry(std::move(bundleRegistry));
         }
         try {
+          //executor从runOnExecutorQueue()返回的map中取得，与OnLoad中的JSCJavaScriptExecutorHolder对应，也与
+          //Java中的JSCJavaScriptExecutor对应。它的实例在JSExecutor.cpp中实现。
           executor->loadApplicationScript(
               std::move(*startupScript), std::move(startupScriptSourceURL));
         } catch (...) {

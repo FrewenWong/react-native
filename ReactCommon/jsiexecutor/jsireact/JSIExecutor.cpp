@@ -68,7 +68,9 @@ JSIExecutor::JSIExecutor(
   runtime_->global().setProperty(
       *runtime, "__jsiExecutorDescription", runtime->description());
 }
-
+/**
+ *到了这个方法，就是去真正加载JS文件了。
+ **/ 
 void JSIExecutor::loadApplicationScript(
     std::unique_ptr<const JSBigString> script,
     std::string sourceURL) {
@@ -284,10 +286,12 @@ void JSIExecutor::bindBridge() {
     }
 
     Object batchedBridge = batchedBridgeValue.asObject(*runtime_);
+    //callFunctionReturnFlushedQueue这些都是MessageQueue.js层里的方法
     callFunctionReturnFlushedQueue_ = batchedBridge.getPropertyAsFunction(
         *runtime_, "callFunctionReturnFlushedQueue");
     invokeCallbackAndReturnFlushedQueue_ = batchedBridge.getPropertyAsFunction(
         *runtime_, "invokeCallbackAndReturnFlushedQueue");
+    //通过获取MessageQueue.js的flushedQueue。
     flushedQueue_ =
         batchedBridge.getPropertyAsFunction(*runtime_, "flushedQueue");
     callFunctionReturnResultAndFlushedQueue_ =
@@ -328,6 +332,8 @@ void JSIExecutor::flush() {
   if (!batchedBridge.isUndefined()) {
     // If calls were made, we bind to the JS bridge methods, and use them to
     // get the pending queue of native calls.
+    //flushedQueue_->call等于调用MessageQueue.js的flushedQUeue()方法，即把JS层相关通信数据通过flushedQUeue()
+    //返回给callNativeModules
     bindBridge();
     callNativeModules(flushedQueue_->call(*runtime_), true);
   } else if (delegate_) {

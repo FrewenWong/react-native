@@ -8,6 +8,9 @@
 package com.facebook.react.bridge.queue;
 
 /** Spec for creating a MessageQueueThread. */
+/**
+ * MessageQueueThreadSpec：创建MessageQueueThread的说明书，描述将要创建的MessageQueueThread的相关细节。
+ */
 public class MessageQueueThreadSpec {
 
   private static final MessageQueueThreadSpec MAIN_UI_SPEC =

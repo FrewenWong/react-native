@@ -38,6 +38,10 @@ Instance::~Instance() {
   }
 }
 
+/**
+ * JS线程jsQueue传递给JSCExecutor.cpp用来执行JS文件，
+ * Native线程传递给NativeToJsBridge.cpp，用来创建通信桥，负责Java与JS的通信。
+ **/
 void Instance::initializeBridge(
     std::unique_ptr<InstanceCallback> callback,
     std::shared_ptr<JSExecutorFactory> jsef,
@@ -45,6 +49,7 @@ void Instance::initializeBridge(
     std::shared_ptr<ModuleRegistry> moduleRegistry) {
   callback_ = std::move(callback);
   moduleRegistry_ = std::move(moduleRegistry);
+  // 对应着Java层的MessageQueueThreadImpl jsQueueThread
   jsQueue->runOnQueueSync([this, &jsef, jsQueue]() mutable {
     nativeToJsBridge_ = std::make_unique<NativeToJsBridge>(
         jsef.get(), moduleRegistry_, jsQueue, callback_);
@@ -85,7 +90,10 @@ void Instance::setSourceURL(std::string sourceURL) {
 
   nativeToJsBridge_->loadApplication(nullptr, nullptr, std::move(sourceURL));
 }
-
+/**
+ * nativeToJsBridge_也是在Instance::initializeBridget()方法里初始化的，具体实现在NativeToJsBridge.cpp里。
+ * 我们其实可以追踪到下面这两个方法调用的是nativeToJsBridge_的loadApplicationSync和loadApplication
+ **/ 
 void Instance::loadScriptFromString(
     std::unique_ptr<const JSBigString> string,
     std::string sourceURL,

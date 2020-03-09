@@ -8,7 +8,6 @@
 package com.facebook.react;
 
 import android.app.Application;
-import androidx.annotation.Nullable;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.JSIModulePackage;
 import com.facebook.react.bridge.JavaScriptExecutorFactory;
@@ -60,24 +59,33 @@ public abstract class ReactNativeHost {
       mReactInstanceManager = null;
     }
   }
-
+  /**
+   * ReactNativeHost主要的工作就是创建了ReactInstanceManager，
+   * 它将一些信息传递给了ReactInstanceManager。
+   */
   protected ReactInstanceManager createReactInstanceManager() {
     ReactMarker.logMarker(ReactMarkerConstants.BUILD_REACT_INSTANCE_MANAGER_START);
     ReactInstanceManagerBuilder builder =
         ReactInstanceManager.builder()
+            //应用上下文
             .setApplication(mApplication)
+            //JSMainModuleP相当于应用首页的js Bundle，可以传递url从服务器拉取js Bundle
+            //当然这个只在dev模式下可以使用
             .setJSMainModulePath(getJSMainModuleName())
+            //是否开启dev模式
             .setUseDeveloperSupport(getUseDeveloperSupport())
+            //红盒的回调
             .setRedBoxHandler(getRedBoxHandler())
             .setJavaScriptExecutorFactory(getJavaScriptExecutorFactory())
+            //自定义UI实现机制，这个我们一般用不到
             .setUIImplementationProvider(getUIImplementationProvider())
             .setJSIModulesPackage(getJSIModulePackage())
             .setInitialLifecycleState(LifecycleState.BEFORE_CREATE);
-
+    //添加ReactPackage
     for (ReactPackage reactPackage : getPackages()) {
       builder.addPackage(reactPackage);
     }
-
+    //获取js Bundle的加载路径
     String jsBundleFile = getJSBundleFile();
     if (jsBundleFile != null) {
       builder.setJSBundleFile(jsBundleFile);
@@ -143,7 +151,7 @@ public abstract class ReactNativeHost {
   protected @Nullable String getBundleAssetName() {
     return "index.android.bundle";
   }
-
+  //是否开启dev模式，dev模式下会有一些调试工具，例如红盒
   /** Returns whether dev mode should be enabled. This enables e.g. the dev menu. */
   public abstract boolean getUseDeveloperSupport();
 
@@ -151,6 +159,8 @@ public abstract class ReactNativeHost {
    * Returns a list of {@link ReactPackage} used by the app. You'll most likely want to return at
    * least the {@code MainReactPackage}. If your app uses additional views or modules besides the
    * default ones, you'll want to include more packages here.
+   * 返回app需要的ReactPackage，这些ReactPackage里包含了运行时需要用到的NativeModule
+   * JavaScriptModule以及ViewManager
    */
   protected abstract List<ReactPackage> getPackages();
 }

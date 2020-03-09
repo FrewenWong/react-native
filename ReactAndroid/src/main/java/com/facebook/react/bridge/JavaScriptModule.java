@@ -20,6 +20,8 @@ import com.facebook.proguard.annotations.DoNotStrip;
  *
  * <p>NB: JavaScriptModule does not allow method name overloading because JS does not allow method
  * name overloading.
+ * JavaScriptModule：这是一个接口，JS Module都会继承此接口，它表示在JS层会有一个相同名字的js文件，该js文件实现了该接口定义的方法，JavaScriptModuleRegistry会利用
+动态代理将这个接口生成代理类，并通过C++传递给JS层，进而调用JS层的方法。
  */
 @DoNotStrip
 public interface JavaScriptModule {}

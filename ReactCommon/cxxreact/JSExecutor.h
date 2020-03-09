@@ -29,12 +29,14 @@ class RAMBundleRegistry;
 
 // This interface describes the delegate interface required by
 // Executor implementations to call from JS into native code.
+// 在C++层的Executor.h文件中同一定义了执行Native代码的抽象类ExecutorDelegate
 class ExecutorDelegate {
  public:
   virtual ~ExecutorDelegate() {}
-
+  //获取模块注册表
   virtual std::shared_ptr<ModuleRegistry> getModuleRegistry() = 0;
-
+  //调用Native Module，在它实现中，它会进一步调用ModuleRegistry::callNativeMethod() -> NativeModule::invoke()，进而
+  //完成对Native Module的调用。
   virtual void callNativeModules(
     JSExecutor& executor, folly::dynamic&& calls, bool isEndOfBatch) = 0;
   virtual MethodCallResult callSerializableNativeHook(
@@ -51,6 +53,7 @@ public:
   virtual ~JSExecutorFactory() {}
 };
 
+// 以及执行JS代码的抽象类JSExecutor
 class RN_EXPORT JSExecutor {
 public:
   /**
